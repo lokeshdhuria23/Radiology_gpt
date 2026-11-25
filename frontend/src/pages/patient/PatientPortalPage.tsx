@@ -85,7 +85,12 @@ export default function PatientPortalPage() {
 
   const currentPatient =
     allPatients?.find((p) => p.id === (selectedPatientId || queryPatientId)) ||
-    allPatients?.find((p) => p.email === user?.email || p.user_id === user?.id) ||
+    allPatients?.find((p) => (user as any)?.patient_id && (p.id === (user as any).patient_id || p.patient_identifier === (user as any).patient_id)) ||
+    allPatients?.find((p) => (user as any)?.patient_identifier && p.patient_identifier?.toLowerCase() === (user as any).patient_identifier.toLowerCase()) ||
+    allPatients?.find((p) => user?.full_name && p.full_name?.toLowerCase().trim() === user.full_name.toLowerCase().trim()) ||
+    allPatients?.find((p) => user?.username && (p.full_name?.toLowerCase().trim() === user.username.toLowerCase().trim() || p.patient_identifier?.toLowerCase() === user.username.toLowerCase())) ||
+    allPatients?.find((p) => user?.email && (p.email?.toLowerCase() === user.email.toLowerCase() || p.contact_info?.email?.toLowerCase() === user.email.toLowerCase())) ||
+    allPatients?.find((p) => user?.id && p.user_id === user.id) ||
     allPatients?.[0]
   const patientId = currentPatient?.id || 'f2e75b7f-9318-4112-8ba2-ff9b0e58fb8f'
 

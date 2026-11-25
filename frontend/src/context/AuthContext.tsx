@@ -6,8 +6,8 @@ interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (data: LoginRequest) => Promise<void>
-  register: (data: RegisterRequest) => Promise<void>
+  login: (data: LoginRequest) => Promise<User>
+  register: (data: RegisterRequest) => Promise<User>
   logout: () => void
   isDemoMode: boolean
 }
@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('access_token', response.access_token)
     localStorage.setItem('user', JSON.stringify(response.user))
     setUser(response.user)
+    return response.user
   }, [])
 
   const register = useCallback(async (data: RegisterRequest) => {
@@ -44,6 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('access_token', response.access_token)
     localStorage.setItem('user', JSON.stringify(response.user))
     setUser(response.user)
+    return response.user
   }, [])
 
   const logout = useCallback(() => {

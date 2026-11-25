@@ -53,6 +53,8 @@ async def get_current_user(
                             "doctor_name": u.get("full_name") if u.get("role") in ("doctor", "admin") else None,
                             "full_name": u.get("full_name", ""),
                             "specialty": u.get("specialty", "Radiology"),
+                            "patient_id": u.get("patient_id"),
+                            "patient_identifier": u.get("patient_identifier"),
                         }
             except Exception:
                 pass
@@ -63,26 +65,30 @@ async def get_current_user(
                 from sqlalchemy import text
                 async with AsyncSessionLocal() as session:
                     q = text("""
-                        SELECT u.id, u.username, u.email, u.role, d.id as doc_id, d.full_name as doc_name, d.specialty
+                        SELECT u.id, u.username, u.email, u.role, d.id as doc_id, d.full_name as doc_name, d.specialty,
+                               p.id as pat_id, p.patient_identifier
                         FROM public.app_users u
                         LEFT JOIN public.doctors d ON d.user_id = u.id
+                        LEFT JOIN public.patients p ON p.user_id = u.id
                         WHERE u.id = :uid
                         LIMIT 1
                     """)
                     res = await session.execute(q, {"uid": uid})
                     row = res.fetchone()
                     if row:
-                        u_id, username, email, role, doc_id, doc_name, specialty = row
+                        u_id, username, email, role, doc_id, doc_name, specialty, pat_id, pat_identifier = row
                         return {
                             "id": UUID(str(u_id)),
                             "auth_user_id": UUID(str(u_id)),
                             "email": email,
                             "role": role or "doctor",
                             "username": username or email.split("@")[0],
-                            "doctor_id": UUID(str(doc_id)) if doc_id else UUID(str(u_id)),
+                            "doctor_id": UUID(str(doc_id)) if doc_id else (UUID(str(u_id)) if role in ("doctor", "admin") else None),
                             "doctor_name": doc_name or username,
                             "full_name": doc_name or username,
                             "specialty": specialty or "Radiology",
+                            "patient_id": str(pat_id) if pat_id else None,
+                            "patient_identifier": str(pat_identifier) if pat_identifier else None,
                         }
             except Exception as e:
                 logger.warning(f"Database user lookup error for token {token}: {e}")

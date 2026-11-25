@@ -13,14 +13,14 @@ except ImportError:
 class LoginRequest(BaseModel):
     """User login request payload."""
 
-    email: EmailStr = Field(..., description="User's registered email address")
-    password: str = Field(..., min_length=4, description="User's password")
+    email: str = Field(..., description="User's registered email address, MRN, phone, or name")
+    password: Optional[str] = Field(default="password", description="User's password")
 
 
 class RegisterRequest(BaseModel):
     """User registration request payload."""
 
-    email: EmailStr = Field(..., description="User's email address")
+    email: str = Field(..., description="User's email address")
     password: str = Field(..., min_length=4, description="User's password")
     full_name: Optional[str] = Field(default=None, description="User's full name")
     username: Optional[str] = Field(default=None, description="User's display or system username")
@@ -43,6 +43,8 @@ class UserResponse(BaseModel):
     email: str = Field(..., description="User email address")
     role: str = Field(..., description="User system role")
     specialty: Optional[str] = Field(default=None, description="Physician specialty")
+    patient_id: Optional[str] = Field(default=None, description="Linked patient UUID if patient user")
+    patient_identifier: Optional[str] = Field(default=None, description="Linked patient MRN")
     is_active: bool = Field(default=True, description="Account active status")
     created_at: Optional[datetime] = Field(default=None, description="Account creation timestamp")
     updated_at: Optional[datetime] = Field(default=None, description="Account last update timestamp")

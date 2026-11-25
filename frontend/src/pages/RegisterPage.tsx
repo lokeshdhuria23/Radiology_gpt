@@ -61,9 +61,14 @@ export default function RegisterPage() {
         role: portal,
         username: data.username || data.email.split('@')[0],
       }
-      await registerUser(payload)
-      if (portal === 'patient') {
-        navigate('/patient')
+      const newUser = await registerUser(payload)
+      const userRole = newUser?.role || portal
+      if (userRole === 'patient') {
+        if (newUser?.patient_id) {
+          navigate(`/patient?patientId=${newUser.patient_id}`)
+        } else {
+          navigate('/patient')
+        }
       } else {
         navigate('/dashboard')
       }

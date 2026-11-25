@@ -7,6 +7,8 @@ export interface User {
   role: string
   specialty?: string | null
   license_number?: string | null
+  patient_id?: string | null
+  patient_identifier?: string | null
   is_active: boolean
   created_at?: string
 }

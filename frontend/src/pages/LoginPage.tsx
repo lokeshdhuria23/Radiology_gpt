@@ -46,9 +46,14 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     try {
-      await login(data)
-      if (portal === 'patient') {
-        navigate('/patient')
+      const loggedInUser = await login(data)
+      const isPatientRole = loggedInUser?.role === 'patient' || portal === 'patient'
+      if (isPatientRole) {
+        if (loggedInUser?.patient_id) {
+          navigate(`/patient?patientId=${loggedInUser.patient_id}`)
+        } else {
+          navigate('/patient')
+        }
       } else {
         navigate('/dashboard')
       }
@@ -145,7 +150,7 @@ export default function LoginPage() {
         {/* Card */}
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl shadow-2xl">
           {/* Header */}
-          <div className="mb-8 text-center">
+          <div className="mb-6 text-center">
             <div className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg ${
               isPatient
                 ? 'bg-gradient-to-br from-cyan-400 to-teal-500 shadow-cyan-500/20'
@@ -159,6 +164,34 @@ export default function LoginPage() {
             <p className="mt-1 text-sm text-gray-400">
               {isPatient ? 'Access your health records & AI assistant' : 'Sign in to your clinical workspace'}
             </p>
+          </div>
+
+          {/* Portal Switcher Tabs */}
+          <div className="mb-5 grid grid-cols-2 gap-2 rounded-xl bg-white/5 p-1">
+            <button
+              type="button"
+              onClick={() => handleSelectPortal('doctor')}
+              className={`flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition cursor-pointer ${
+                !isPatient
+                  ? 'bg-primary-600 text-white shadow'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <UserCog className="h-4 w-4" />
+              Doctor Portal
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSelectPortal('patient')}
+              className={`flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition cursor-pointer ${
+                isPatient
+                  ? 'bg-cyan-600 text-white shadow'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Users className="h-4 w-4" />
+              Patient Portal
+            </button>
           </div>
 
           {/* Quick Demo Credentials Pill */}
@@ -196,6 +229,41 @@ export default function LoginPage() {
                 ⚡ 1-Click Login
               </button>
             </div>
+            {isPatient && (
+              <div className="mt-2.5 border-t border-cyan-500/20 pt-2 text-[11px] text-cyan-300/90 flex flex-wrap items-center gap-1.5">
+                <span className="text-gray-400">Quick Patient logins:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValue('email', 'amit kumar')
+                    setValue('password', 'password')
+                  }}
+                  className="rounded bg-cyan-900/60 px-1.5 py-0.5 text-cyan-200 hover:bg-cyan-800 transition cursor-pointer font-medium"
+                >
+                  amit kumar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValue('email', 'MRN-408525')
+                    setValue('password', 'password')
+                  }}
+                  className="rounded bg-cyan-900/60 px-1.5 py-0.5 text-cyan-200 hover:bg-cyan-800 transition cursor-pointer font-medium"
+                >
+                  MRN-408525
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValue('email', 'arya stark')
+                    setValue('password', 'password')
+                  }}
+                  className="rounded bg-cyan-900/60 px-1.5 py-0.5 text-cyan-200 hover:bg-cyan-800 transition cursor-pointer font-medium"
+                >
+                  arya stark
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Error */}
@@ -209,12 +277,14 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-300">Email</label>
+              <label className="block text-sm font-medium text-gray-300">
+                {isPatient ? 'Patient ID / MRN, Name, or Email *' : 'Physician Email or Username *'}
+              </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
                 <input
-                  type="email"
-                  placeholder="Enter your email"
+                  type="text"
+                  placeholder={isPatient ? 'e.g. MRN-408525, amit kumar, or patient@demo.com' : 'e.g. doctor@demo.com or Dr. Ashish'}
                   className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-gray-500 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition"
                   {...register('email', { required: true })}
                 />
