@@ -200,68 +200,32 @@ export default function LoginPage() {
               ? 'border-cyan-500/20 bg-cyan-500/10'
               : 'border-primary-500/20 bg-primary-500/10'
           }`}>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div className="text-xs text-gray-300">
-                <span className={`font-semibold ${isPatient ? 'text-cyan-400' : 'text-primary-400'}`}>
-                  {isPatient ? 'Patient Demo:' : 'Doctor Demo:'}
-                </span>{' '}
-                <span className="font-mono text-gray-200">
-                  {isPatient ? 'patient@demo.com' : 'doctor@demo.com'}
-                </span>
-                <span className="mx-1 text-gray-500">•</span>
-                <span className="font-mono text-gray-400">password</span>
+            {!isPatient ? (
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-xs text-gray-300">
+                  <span className="font-semibold text-primary-400">Doctor Demo:</span>{' '}
+                  <span className="font-mono text-gray-200">doctor@demo.com</span>
+                  <span className="mx-1 text-gray-500">•</span>
+                  <span className="font-mono text-gray-400">password</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValue('email', 'doctor@demo.com')
+                    setValue('password', 'password')
+                    onSubmit({ email: 'doctor@demo.com', password: 'password' })
+                  }}
+                  className="rounded-lg px-2.5 py-1 text-xs font-semibold text-white transition cursor-pointer shadow-sm bg-primary-600 hover:bg-primary-500"
+                >
+                  ⚡ 1-Click Login
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const demoEmail = isPatient ? 'patient@demo.com' : 'doctor@demo.com'
-                  const demoPass = 'password'
-                  setValue('email', demoEmail)
-                  setValue('password', demoPass)
-                  onSubmit({ email: demoEmail, password: demoPass })
-                }}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold text-white transition cursor-pointer shadow-sm ${
-                  isPatient
-                    ? 'bg-cyan-600 hover:bg-cyan-500'
-                    : 'bg-primary-600 hover:bg-primary-500'
-                }`}
-              >
-                ⚡ 1-Click Login
-              </button>
-            </div>
-            {isPatient && (
-              <div className="mt-2.5 border-t border-cyan-500/20 pt-2 text-[11px] text-cyan-300/90 flex flex-wrap items-center gap-1.5">
-                <span className="text-gray-400">Quick Patient logins:</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setValue('email', 'amit kumar')
-                    setValue('password', 'password')
-                  }}
-                  className="rounded bg-cyan-900/60 px-1.5 py-0.5 text-cyan-200 hover:bg-cyan-800 transition cursor-pointer font-medium"
-                >
-                  amit kumar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setValue('email', 'MRN-408525')
-                    setValue('password', 'password')
-                  }}
-                  className="rounded bg-cyan-900/60 px-1.5 py-0.5 text-cyan-200 hover:bg-cyan-800 transition cursor-pointer font-medium"
-                >
-                  MRN-408525
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setValue('email', 'arya stark')
-                    setValue('password', 'password')
-                  }}
-                  className="rounded bg-cyan-900/60 px-1.5 py-0.5 text-cyan-200 hover:bg-cyan-800 transition cursor-pointer font-medium"
-                >
-                  arya stark
-                </button>
+            ) : (
+              <div className="text-xs text-cyan-200/90 space-y-1">
+                <p className="font-semibold text-cyan-300">Patient Self-Service Access:</p>
+                <p className="text-[11px] text-gray-300">
+                  Patients register via the <span className="font-medium text-cyan-300">Register for Patient Portal</span> link below. Once registered, you can log in using your <strong>Assigned MRN (MRN-XXXXXX)</strong>, <strong>Full Name</strong>, or <strong>Email</strong>.
+                </p>
               </div>
             )}
           </div>

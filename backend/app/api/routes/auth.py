@@ -56,16 +56,6 @@ REGISTERED_USERS = {
         "specialty": "General",
         "is_active": True,
     },
-    "patient@demo.com": {
-        "id": "00000000-0000-0000-0000-000000000004",
-        "username": "John Doe",
-        "full_name": "John Doe",
-        "email": "patient@demo.com",
-        "password": "password",
-        "role": "patient",
-        "specialty": None,
-        "is_active": True,
-    },
 }
 
 
@@ -458,6 +448,45 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
             await db.commit()
     except Exception as e:
         logger.warning(f"Could not persist user to database during registration: {e}")
+
+    # Also sync to Supabase via HTTPS REST API (guarantees write even if direct DB port 5432 is blocked)
+    try:
+        from supabase import create_client
+        sb_key = settings.SUPABASE_SERVICE_ROLE_KEY or settings.SUPABASE_ANON_KEY
+        if settings.SUPABASE_URL and sb_key:
+            sb_client = create_client(settings.SUPABASE_URL, sb_key)
+            sb_client.table("app_users").upsert({
+                "id": str(user_id),
+                "username": username,
+                "email": email_clean,
+                "role": role,
+                "is_active": True,
+            }).execute()
+
+            if role == "doctor":
+                sb_client.table("doctors").upsert({
+                    "user_id": str(user_id),
+                    "full_name": full_name,
+                    "specialty": body.specialty or "Radiology",
+                    "qualifications": body.license_number or "",
+                }).execute()
+            elif role == "patient" and patient_id_str and mrn_str:
+                sb_client.table("patients").upsert({
+                    "id": patient_id_str,
+                    "user_id": str(user_id),
+                    "patient_identifier": mrn_str,
+                    "full_name": full_name,
+                    "date_of_birth": str(dob),
+                    "sex": sex,
+                    "contact_info": {
+                        "email": email_clean,
+                        "phone": body.phone or "",
+                        "specialty": consultation_val,
+                        "consultation_type": consultation_val,
+                    },
+                }).execute()
+    except Exception as sb_err:
+        logger.debug(f"Supabase REST table sync: {sb_err}")
 
     # Also register with Supabase Auth if service key configured
     try:

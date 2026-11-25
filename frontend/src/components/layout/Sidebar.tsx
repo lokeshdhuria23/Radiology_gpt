@@ -4,7 +4,6 @@ import { useAuth } from '@/context/AuthContext'
 import { useDoctorProfile, useUpdateDoctorSpecialty } from '@/hooks/useApi'
 import {
   Users,
-  UserPlus,
   Sparkles,
   Pill,
   Settings,
@@ -16,7 +15,6 @@ import {
   PanelLeft,
   Stethoscope,
 } from 'lucide-react'
-import { CreatePatientModal } from '@/components/modals/CreatePatientModal'
 
 const SPECIALTIES = [
   'General',
@@ -46,9 +44,6 @@ export function Sidebar({
 
   const { data: profile } = useDoctorProfile()
   const updateSpecialty = useUpdateDoctorSpecialty()
-
-  // Modals state
-  const [showAddPatient, setShowAddPatient] = useState(false)
 
   // Profile popover state
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
@@ -128,20 +123,13 @@ export function Sidebar({
   // Collapsed sidebar toggle
   if (isCollapsed) {
     return (
-      <>
-        <button
-          onClick={onToggle}
-          className="fixed left-3 top-3 z-40 flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white shadow-sm hover:bg-gray-50 transition cursor-pointer"
-          title="Open Sidebar"
-        >
-          <PanelLeft className="h-4 w-4 text-gray-600" />
-        </button>
-
-        <CreatePatientModal
-          isOpen={showAddPatient}
-          onClose={() => setShowAddPatient(false)}
-        />
-      </>
+      <button
+        onClick={onToggle}
+        className="fixed left-3 top-3 z-40 flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white shadow-sm hover:bg-gray-50 transition cursor-pointer"
+        title="Open Sidebar"
+      >
+        <PanelLeft className="h-4 w-4 text-gray-600" />
+      </button>
     )
   }
 
@@ -172,17 +160,6 @@ export function Sidebar({
             title="Collapse Sidebar"
           >
             <PanelLeftClose className="h-4 w-4" />
-          </button>
-        </div>
-
-        {/* Primary Action Button: Add Patient */}
-        <div className="px-4 pt-4 pb-2">
-          <button
-            onClick={() => setShowAddPatient(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-600/30 hover:bg-blue-700 hover:shadow-md transition cursor-pointer active:scale-[0.98]"
-          >
-            <UserPlus className="h-4 w-4" />
-            <span>Add Patient</span>
           </button>
         </div>
 
@@ -310,12 +287,6 @@ export function Sidebar({
           </button>
         </div>
       </aside>
-
-      {/* Interactive Modals */}
-      <CreatePatientModal
-        isOpen={showAddPatient}
-        onClose={() => setShowAddPatient(false)}
-      />
     </>
   )
 }

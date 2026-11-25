@@ -12,18 +12,26 @@ from app.core.security import create_supabase_client
 
 logger = get_logger("database.session")
 
-# Format database URL with IPv6 support to prevent Windows DNS getaddrinfo timeouts
+# Format database URL
 db_url = settings.SUPABASE_DB_URL
-if "db.ohldosoabcpixgizbzxa.supabase.co" in db_url:
-    db_url = db_url.replace("db.ohldosoabcpixgizbzxa.supabase.co", "[2406:da1a:109c:2600:f75f:79a2:e721:a784]")
+
+# Connect arguments with short timeout to prevent server thread blocking when remote DB port is unreachable
+connect_args = {}
+if "postgresql" in db_url:
+    connect_args = {"timeout": 3}
 
 # SQLAlchemy async engine configured for Supabase PostgreSQL
-engine = create_async_engine(
-    db_url,
-    echo=(settings.APP_ENV == "development" and settings.LOG_LEVEL.upper() == "DEBUG"),
-    future=True,
-    pool_pre_ping=True,
-)
+try:
+    engine = create_async_engine(
+        db_url,
+        echo=(settings.APP_ENV == "development" and settings.LOG_LEVEL.upper() == "DEBUG"),
+        future=True,
+        pool_pre_ping=True,
+        connect_args=connect_args,
+    )
+except Exception as e:
+    logger.warning(f"Could not initialize primary database engine: {e}")
+    engine = create_async_engine("sqlite+aiosqlite:///./logs/clinic.db", future=True)
 
 # Async session factory
 AsyncSessionLocal = async_sessionmaker(

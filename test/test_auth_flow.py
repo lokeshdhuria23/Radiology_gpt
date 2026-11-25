@@ -1,76 +1,70 @@
 import asyncio
-import uuid
 from app.api.routes.auth import login, register, REGISTERED_USERS
 from app.schemas.auth import LoginRequest, RegisterRequest
 from app.database import fallback_store
 from app.database.session import AsyncSessionLocal
 
-async def test_auth():
-    print("Testing auth flows...")
+async def test_full_flow():
+    print("=== Testing Clean Slate & Authentication ===")
 
-    # Ensure fallback store has a sample patient for testing
-    p1 = fallback_store.add_patient({
-        "id": "f2e75b7f-9318-4112-8ba2-ff9b0e58fb8f",
-        "patient_identifier": "MRN-408525",
-        "full_name": "amit kumar",
-        "specialty": "Neurology",
-        "phone": "9848563343",
-        "contact_info": {"phone": "9848563343", "email": "amit@patient.local"}
-    })
-    print(f"Added patient: {p1.full_name} ({p1.patient_identifier})")
+    # 1. Clean slate verification
+    fallback_store.clear_all_patient_data()
+    initial_patients = fallback_store.list_patients()
+    print(f"1. Initial patients in roster: {initial_patients['total']}")
+    assert initial_patients['total'] == 0, "Patient roster should be clean slate (0 patients)"
 
     async with AsyncSessionLocal() as session:
-        # 1. Test login by MRN
-        res_mrn = await login(LoginRequest(email="MRN-408525", password="password"), session)
-        print(f"Login by MRN (MRN-408525): role={res_mrn.user.role}, name={res_mrn.user.full_name}, patient_id={res_mrn.user.patient_id}")
-        assert res_mrn.user.role == "patient"
-        assert res_mrn.user.full_name == "amit kumar"
+        # 2. Test Doctor Login
+        doc_login = await login(LoginRequest(email="doctor@demo.com", password="password"), session)
+        print(f"2. Doctor login: {doc_login.user.full_name} ({doc_login.user.role})")
+        assert doc_login.user.role == "doctor"
 
-        # 2. Test login by Name
-        res_name = await login(LoginRequest(email="amit kumar", password="password"), session)
-        print(f"Login by Name (amit kumar): role={res_name.user.role}, name={res_name.user.full_name}, patient_id={res_name.user.patient_id}")
-        assert res_name.user.role == "patient"
-        assert res_name.user.full_name == "amit kumar"
-
-        # 3. Test login by standard patient demo
-        res_pat = await login(LoginRequest(email="patient@demo.com", password="password"), session)
-        print(f"Login by patient@demo.com: role={res_pat.user.role}, name={res_pat.user.full_name}")
-        assert res_pat.user.role == "patient"
-
-        # 4. Test login by Doctor
-        res_doc = await login(LoginRequest(email="doctor@demo.com", password="password"), session)
-        print(f"Login by doctor@demo.com: role={res_doc.user.role}, name={res_doc.user.full_name}")
-        assert res_doc.user.role == "doctor"
-
-        # 5. Test registration for a new Patient
-        new_pat_req = RegisterRequest(
-            email="rohit.sharma@example.com",
-            password="password123",
-            full_name="Rohit Sharma",
-            role="patient",
-            phone="9876543210",
-            date_of_birth="1992-04-30",
-            sex="male",
-            consultation_type="Cardiology"
+        # 3. Patient Registration via Patient Portal
+        pat_reg = await register(
+            RegisterRequest(
+                email="kavya.verma@example.com",
+                password="password123",
+                full_name="Kavya Verma",
+                role="patient",
+                phone="9876543210",
+                date_of_birth="2001-08-15",
+                sex="female",
+                consultation_type="Neurology"
+            ),
+            session
         )
-        res_reg = await register(new_pat_req, session)
-        print(f"Register new patient: role={res_reg.user.role}, name={res_reg.user.full_name}, mrn={res_reg.user.patient_identifier}, pat_id={res_reg.user.patient_id}")
-        assert res_reg.user.role == "patient"
-        assert res_reg.user.full_name == "Rohit Sharma"
-        assert res_reg.user.patient_identifier is not None
+        print(f"3. Patient registered: {pat_reg.user.full_name}, MRN={pat_reg.user.patient_identifier}, role={pat_reg.user.role}")
+        assert pat_reg.user.role == "patient"
+        assert pat_reg.user.patient_identifier is not None
+        assigned_mrn = pat_reg.user.patient_identifier
 
-        # 6. Test login with newly registered patient
-        res_new_login = await login(LoginRequest(email="rohit.sharma@example.com", password="password123"), session)
-        print(f"Login newly registered patient: role={res_new_login.user.role}, name={res_new_login.user.full_name}")
-        assert res_new_login.user.role == "patient"
+        # 4. Registered Patient automatically appears on Doctor Portal roster
+        roster = fallback_store.list_patients()
+        print(f"4. Doctor roster count after patient registration: {roster['total']}")
+        assert roster['total'] == 1
+        assert roster['items'][0].full_name == "Kavya Verma"
+        assert roster['items'][0].patient_identifier == assigned_mrn
+        print(f"   Roster patient verified: {roster['items'][0].full_name} ({roster['items'][0].patient_identifier}) - Specialty: {roster['items'][0].specialty}")
 
-        # 7. Test login newly registered patient by their MRN!
-        res_mrn_login = await login(LoginRequest(email=res_reg.user.patient_identifier, password="password123"), session)
-        print(f"Login newly registered patient by MRN: role={res_mrn_login.user.role}, name={res_mrn_login.user.full_name}")
-        assert res_mrn_login.user.role == "patient"
-        assert res_mrn_login.user.full_name == "Rohit Sharma"
+        # 5. Patient Authentication by MRN
+        mrn_login = await login(LoginRequest(email=assigned_mrn, password="password123"), session)
+        print(f"5. Patient login by MRN ({assigned_mrn}): {mrn_login.user.full_name} ({mrn_login.user.role})")
+        assert mrn_login.user.role == "patient"
+        assert mrn_login.user.full_name == "Kavya Verma"
 
-    print("ALL AUTH TESTS PASSED SUCCESSFULLY!")
+        # 6. Patient Authentication by Full Name
+        name_login = await login(LoginRequest(email="Kavya Verma", password="password123"), session)
+        print(f"6. Patient login by Name (Kavya Verma): {name_login.user.full_name} ({name_login.user.role})")
+        assert name_login.user.role == "patient"
+        assert name_login.user.full_name == "Kavya Verma"
+
+        # 7. Patient Authentication by Email
+        email_login = await login(LoginRequest(email="kavya.verma@example.com", password="password123"), session)
+        print(f"7. Patient login by Email: {email_login.user.full_name} ({email_login.user.role})")
+        assert email_login.user.role == "patient"
+        assert email_login.user.full_name == "Kavya Verma"
+
+    print("\n>>> ALL TESTS PASSED SUCCESSFULLY! Clean slate, self-registration, doctor roster syncing, and authentication verified. <<<")
 
 if __name__ == "__main__":
-    asyncio.run(test_auth())
+    asyncio.run(test_full_flow())

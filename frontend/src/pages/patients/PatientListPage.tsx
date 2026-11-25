@@ -4,9 +4,8 @@ import { useAuth } from '@/context/AuthContext'
 import { usePatients } from '@/hooks/useApi'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Card, CardContent, Button, Spinner, EmptyState, Badge } from '@/components/ui'
-import { Plus, Search, User, ChevronRight, Stethoscope, Sparkles, UserCheck } from 'lucide-react'
+import { Search, User, ChevronRight, Stethoscope, Sparkles, UserCheck, RefreshCw } from 'lucide-react'
 import { calculateAge } from '@/lib/utils'
-import { CreatePatientModal } from '@/components/modals/CreatePatientModal'
 
 export default function PatientListPage() {
   const { user } = useAuth()
@@ -19,7 +18,6 @@ export default function PatientListPage() {
   
   const [searchInput, setSearchInput] = useState('')
   const [activeSearch, setActiveSearch] = useState('')
-  const [showAddPatient, setShowAddPatient] = useState(false)
 
   const { data: rawPatients, isLoading, refetch } = usePatients(activeSearch || undefined)
 
@@ -43,10 +41,11 @@ export default function PatientListPage() {
       {/* Page Header */}
       <PageHeader
         title="Patients"
-        description="Clinical roster & patient registry"
+        description="Clinical roster & patient registry (Registered via Patient Portal)"
         actions={
-          <Button onClick={() => setShowAddPatient(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
-            <Plus className="h-4 w-4 mr-1.5" /> Add Patient
+          <Button onClick={() => refetch()} variant="outline" className="border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center gap-1.5">
+            <RefreshCw className="h-4 w-4 text-gray-500" />
+            <span>Refresh Roster</span>
           </Button>
         }
       />
@@ -202,29 +201,19 @@ export default function PatientListPage() {
       ) : (
         <EmptyState
           icon={User}
-          title={activeSearch ? `No patients matching "${activeSearch}"` : 'No patients registered'}
+          title={activeSearch ? `No patients matching "${activeSearch}"` : 'No registered patients yet'}
           description={
             activeSearch
               ? 'Try searching with another name or MRN'
-              : 'Add your first patient to begin clinical diagnostic analysis.'
+              : 'Patients self-register through the Patient Portal. Once registered, their profiles and records appear here automatically.'
           }
           action={
-            <Button onClick={() => setShowAddPatient(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Plus className="h-4 w-4 mr-1.5" /> Add Patient
+            <Button onClick={() => refetch()} variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50">
+              Refresh Patient Roster
             </Button>
           }
         />
       )}
-
-      {/* Add Patient Modal */}
-      <CreatePatientModal
-        isOpen={showAddPatient}
-        onClose={() => {
-          setShowAddPatient(false)
-          refetch()
-        }}
-        onSuccess={() => refetch()}
-      />
     </div>
   )
 }

@@ -1,111 +1,71 @@
+import json
+import os
 import uuid as uuid_mod
 from datetime import date, datetime
+from pathlib import Path
 from typing import Optional, List, Dict, Any
 from app.schemas.patient import PatientResponse
 
-FALLBACK_PATIENTS: Dict[str, Dict[str, Any]] = {
-    "72976e9a-5202-4c20-a6c6-9e1e9098364d": {
-        "id": "72976e9a-5202-4c20-a6c6-9e1e9098364d",
-        "user_id": None,
-        "patient_identifier": "MRN-945565",
-        "medical_record_number": "MRN-945565",
-        "full_name": "k l",
-        "first_name": "k",
-        "last_name": "l",
-        "date_of_birth": "1980-05-14",
-        "sex": "male",
-        "gender": "male",
-        "blood_type": "O+",
-        "specialty": "Radiology",
-        "consultation_type": "Thoracic Radiography",
-        "contact_info": {
-            "phone": "+1 (555) 234-5678",
-            "email": "kl@patient.com",
-            "blood_type": "O+",
-            "specialty": "Radiology",
-            "consultation_type": "Thoracic Radiography",
-        },
-        "address": "124 Healthcare Way, Suite 400",
-        "emergency_contact": {
-            "name": "Jane Doe",
-            "phone": "+1 (555) 987-6543",
-        },
-        "phone": "+1 (555) 234-5678",
-        "email": "kl@patient.com",
-        "created_at": "2026-11-23T12:00:00Z",
-        "updated_at": "2026-11-23T12:00:00Z",
-    },
-    "a0000000-0000-0000-0000-000000000004": {
-        "id": "a0000000-0000-0000-0000-000000000004",
-        "user_id": None,
-        "patient_identifier": "PT-10021",
-        "medical_record_number": "PT-10021",
-        "full_name": "Sarah Johnson",
-        "first_name": "Sarah",
-        "last_name": "Johnson",
-        "date_of_birth": "1990-08-22",
-        "sex": "female",
-        "gender": "female",
-        "blood_type": "A+",
-        "specialty": "Radiology",
-        "consultation_type": "Chest Radiograph",
-        "contact_info": {
-            "phone": "+1 (555) 456-7890",
-            "email": "sarah.j@patient.com",
-            "blood_type": "A+",
-            "specialty": "Radiology",
-            "consultation_type": "Chest Radiograph",
-        },
-        "address": "742 Evergreen Terrace",
-        "emergency_contact": {
-            "name": "Mark Johnson",
-            "phone": "+1 (555) 112-2334",
-        },
-        "phone": "+1 (555) 456-7890",
-        "email": "sarah.j@patient.com",
-        "created_at": "2026-11-23T12:00:00Z",
-        "updated_at": "2026-11-23T12:00:00Z",
-    },
-    "a0000000-0000-0000-0000-000000000005": {
-        "id": "a0000000-0000-0000-0000-000000000005",
-        "user_id": None,
-        "patient_identifier": "PT-10045",
-        "medical_record_number": "PT-10045",
-        "full_name": "Michael Chen",
-        "first_name": "Michael",
-        "last_name": "Chen",
-        "date_of_birth": "1968-11-03",
-        "sex": "male",
-        "gender": "male",
-        "blood_type": "B+",
-        "specialty": "Radiology",
-        "consultation_type": "Cardiothoracic Assessment",
-        "contact_info": {
-            "phone": "+1 (555) 789-0123",
-            "email": "mchen@patient.com",
-            "blood_type": "B+",
-            "specialty": "Radiology",
-            "consultation_type": "Cardiothoracic Assessment",
-        },
-        "address": "55 Lakeview Boulevard",
-        "emergency_contact": {
-            "name": "Lily Chen",
-            "phone": "+1 (555) 334-4556",
-        },
-        "phone": "+1 (555) 789-0123",
-        "email": "mchen@patient.com",
-        "created_at": "2026-11-23T12:00:00Z",
-        "updated_at": "2026-11-23T12:00:00Z",
-    },
-}
+STORE_DIR = Path("./logs")
+STORE_FILE = STORE_DIR / "clinic_store.json"
 
+# In-memory stores initialized empty as requested (clean slate)
+FALLBACK_PATIENTS: Dict[str, Dict[str, Any]] = {}
 FALLBACK_DOCUMENTS: Dict[str, Dict[str, Any]] = {}
+FALLBACK_MEDICATIONS: List[Dict[str, Any]] = []
+FALLBACK_REPORTS: List[Dict[str, Any]] = []
+
+
+def _save_to_disk():
+    """Persist clinic patient and clinical interactions to disk."""
+    try:
+        STORE_DIR.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "patients": FALLBACK_PATIENTS,
+            "documents": FALLBACK_DOCUMENTS,
+            "medications": FALLBACK_MEDICATIONS,
+            "reports": FALLBACK_REPORTS,
+        }
+        with open(STORE_FILE, "w", encoding="utf-8") as f:
+            json.dump(payload, f, default=str, indent=2)
+    except Exception as e:
+        pass
+
+
+def _load_from_disk():
+    """Load previously registered patients and interactions from disk."""
+    global FALLBACK_PATIENTS, FALLBACK_DOCUMENTS, FALLBACK_MEDICATIONS, FALLBACK_REPORTS
+    if STORE_FILE.exists():
+        try:
+            with open(STORE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                FALLBACK_PATIENTS = data.get("patients", {})
+                FALLBACK_DOCUMENTS = data.get("documents", {})
+                FALLBACK_MEDICATIONS = data.get("medications", [])
+                FALLBACK_REPORTS = data.get("reports", [])
+        except Exception:
+            pass
+
+
+# Load persistent store if present
+_load_from_disk()
+
+
+def clear_all_patient_data():
+    """Completely empty patient and interaction data."""
+    global FALLBACK_PATIENTS, FALLBACK_DOCUMENTS, FALLBACK_MEDICATIONS, FALLBACK_REPORTS
+    FALLBACK_PATIENTS = {}
+    FALLBACK_DOCUMENTS = {}
+    FALLBACK_MEDICATIONS = []
+    FALLBACK_REPORTS = []
+    _save_to_disk()
 
 
 def add_document(data: dict) -> dict:
     doc_id = str(data.get("id") or uuid_mod.uuid4())
     data["id"] = doc_id
     FALLBACK_DOCUMENTS[doc_id] = data
+    _save_to_disk()
     return data
 
 
@@ -117,42 +77,6 @@ def get_documents(patient_id: Optional[str] = None) -> List[dict]:
     if patient_id:
         return [d for d in FALLBACK_DOCUMENTS.values() if str(d.get("patient_id")) == str(patient_id)]
     return list(FALLBACK_DOCUMENTS.values())
-
-
-FALLBACK_MEDICATIONS: List[Dict[str, Any]] = [
-    {
-        "id": "176761a0-03d2-4a38-a78f-ce90c6a5c0ac",
-        "patient_id": "72976e9a-5202-4c20-a6c6-9e1e9098364d",
-        "patient_name": "k l",
-        "patient_identifier": "MRN-945565",
-        "medication_name": "aspirin",
-        "dosage": "1",
-        "frequency": "2",
-        "route": "internal",
-        "status": "active",
-        "start_date": "2026-11-23 16:31:36",
-        "end_date": None,
-        "notes": "pain killer",
-        "instructions": "pain killer",
-        "created_at": "2026-11-23 16:31:36",
-    },
-    {
-        "id": "5b20b7ed-38bb-4033-9774-4af87bef64d0",
-        "patient_id": "72976e9a-5202-4c20-a6c6-9e1e9098364d",
-        "patient_name": "k l",
-        "patient_identifier": "MRN-945565",
-        "medication_name": "Amoxicillin-Clavulanate",
-        "dosage": "875/125 mg",
-        "frequency": "Oral twice daily with meals",
-        "route": "oral",
-        "status": "active",
-        "start_date": "2026-11-23 16:29:12",
-        "end_date": None,
-        "notes": "Complete full course. Take with meals to avoid GI upset. Return immediately if high fever or breathing distress occurs.",
-        "instructions": "Complete full course. Take with meals to avoid GI upset. Return immediately if high fever or breathing distress occurs.",
-        "created_at": "2026-11-23 16:29:12",
-    },
-]
 
 
 def _to_response_obj(data: dict) -> PatientResponse:
@@ -232,6 +156,7 @@ def add_patient(data: dict) -> PatientResponse:
     if not data.get("patient_identifier"):
         data["patient_identifier"] = f"MRN-{uuid_mod.uuid4().hex[:6].upper()}"
     FALLBACK_PATIENTS[p_id] = data
+    _save_to_disk()
     return _to_response_obj(data)
 
 
@@ -257,10 +182,8 @@ def add_medication(data: dict) -> dict:
             data["patient_identifier"] = pat.get("patient_identifier", "")
             
     FALLBACK_MEDICATIONS.insert(0, data)
+    _save_to_disk()
     return data
-
-
-FALLBACK_REPORTS: List[Dict[str, Any]] = []
 
 
 def get_reports(patient_id: Optional[str] = None) -> List[dict]:
@@ -275,4 +198,5 @@ def add_report(data: dict) -> dict:
     if not data.get("created_at"):
         data["created_at"] = str(datetime.now())
     FALLBACK_REPORTS.insert(0, data)
+    _save_to_disk()
     return data
