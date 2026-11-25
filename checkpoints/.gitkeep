@@ -1,0 +1,3 @@
+# Model Checkpoints Directory
+Place your local fine-tuned weights, projection heads, or LoRA adapter safetensors here.
+See project README.md for instructions on configuring model checkpoints.

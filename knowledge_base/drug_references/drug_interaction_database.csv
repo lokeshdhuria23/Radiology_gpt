@@ -1,0 +1,16 @@
+drug_1,drug_2,severity,interaction_type,clinical_consequence,recommendation
+Warfarin,Ibuprofen,Critical,Pharmacodynamic,Severe GI bleeding and prolonged INR,Avoid combination. Use acetaminophen for mild/moderate pain.
+Apixaban,Naproxen,Critical,Pharmacodynamic,3-5x increased major bleeding risk,Avoid NSAIDs with DOACs. Consider topical analgesics or acetaminophen.
+Rivaroxaban,Ketorolac,Critical,Pharmacodynamic,Severe gastrointestinal and surgical site hemorrhage,Strict contraindication. Ketorolac duration max 5 days without anticoagulants.
+Lisinopril,Losartan,Critical,Pharmacodynamic,Acute renal failure, severe hyperkalemia, syncope,Dual RAAS blockade is contraindicated. Use single agent plus alternative class.
+Metformin,Iodinated Contrast,High,Pharmacokinetic,Metformin-associated lactic acidosis (MALA) if AKI occurs,Hold metformin for 48 hours post-contrast in patients with eGFR < 60.
+Lisinopril,Spironolactone,High,Pharmacodynamic,Severe hyperkalemia (K+ > 6.0 mEq/L) and arrhythmias,Monitor serum potassium and creatinine at 1 and 4 weeks post-initiation.
+Amiodarone,Levofloxacin,High,Pharmacodynamic,Additive QTc prolongation leading to Torsades de Pointes,Obtain baseline ECG. Choose alternative antibiotic (e.g. Ceftriaxone or Doxycycline).
+Citalopram,Ondansetron,Moderate,Pharmacodynamic,Prolongation of cardiac repolarization,Limit citalopram to 20 mg/d in elderly; use alternative antiemetic if QTc > 480 ms.
+Methotrexate,Amoxicillin,High,Pharmacokinetic,Reduced renal clearance of methotrexate leading to pancytopenia,Monitor CBC and methotrexate serum levels closely; consider alternate antibiotic.
+Simvastatin,Amlodipine,Moderate,Pharmacokinetic,CYP3A4 inhibition increases simvastatin levels and myopathy risk,Do not exceed simvastatin 20 mg daily when co-administered with amlodipine.
+Clopidogrel,Omeprazole,Moderate,Pharmacokinetic,CYP2C19 inhibition reduces active metabolite of clopidogrel,Use pantoprazole instead of omeprazole as it has minimal CYP2C19 inhibition.
+Digoxin,Clarithromycin,High,Pharmacokinetic,P-glycoprotein inhibition causes toxic digoxin levels and heart block,Reduce digoxin dose by 50% or switch macrolide to azithromycin; monitor levels.
+Sildenafil,Nitroglycerin,Critical,Pharmacodynamic,Profound life-threatening hypotension and cardiovascular collapse,Strict contraindication. Nitrate hold: 24h post-sildenafil, 48h post-tadalafil.
+Lithium,Hydrochlorothiazide,High,Pharmacokinetic,Reduced renal sodium causes proximal lithium reabsorption and toxicity,Monitor lithium levels weekly upon thiazide start; dose reduction typically 50%.
+Potassium Chloride,Spironolactone,High,Pharmacodynamic,Life-threatening hyperkalemia,Avoid potassium supplementation unless documented hypokalemia under close supervision.
